@@ -1,0 +1,60 @@
+{% extends "game/base.html" %}
+{% block title %}Train - Crime City{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-dumbbell"></i> Training Center</h5>
+            </div>
+            <div class="card-body">
+                <p>Improve your character's stats by training. Each training session costs 5 energy points.</p>
+                
+                {% if player.energy < 5 %}
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">Not enough energy!</h5>
+                    <p>You need at least 5 energy to train. Wait for your energy to replenish or use an energy drink.</p>
+                </div>
+                {% else %}
+                <div class="row">
+                    {% for stat in stats %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">{{ stat.display }}</h5>
+                            </div>
+                            <div class="card-body">
+                                <h3 class="text-center mb-3">{{ stat.value }}</h3>
+                                <p>
+                                    {% if stat.name == 'strength' %}
+                                    Increases damage dealt in combat.
+                                    {% elif stat.name == 'defense' %}
+                                    Reduces damage taken in combat.
+                                    {% elif stat.name == 'speed' %}
+                                    Improves chance to strike first in combat.
+                                    {% elif stat.name == 'dexterity' %}
+                                    Increases accuracy and critical hit chance.
+                                    {% elif stat.name == 'intelligence' %}
+                                    Improves various skills and missions success rate.
+                                    {% endif %}
+                                </p>
+                                
+                                <form method="post" class="d-grid">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="stat" value="{{ stat.name }}">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-plus-circle"></i> Train (5 Energy)
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

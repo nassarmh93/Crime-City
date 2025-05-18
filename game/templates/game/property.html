@@ -1,0 +1,167 @@
+{% extends 'game/base.html' %}
+{% load static %}
+{% load game_extras %}
+
+{% block title %}Properties - Crime City{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Property Management</h1>
+    
+    <div class="row">
+        <!-- Player's Properties -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">My Properties</h4>
+                    <form method="post" action="{% url 'collect_all_income' %}" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-success" {% if player.energy < 5 %}disabled{% endif %}>
+                            Collect All Income (5 Energy)
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    {% if properties %}
+                        <div class="row">
+                            {% for property in properties %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h5 class="card-title mb-0">{{ property.name }}</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>Type:</strong> {{ property.property_type.name }}</p>
+                                            <p><strong>Location:</strong> {{ property.location.name }}</p>
+                                            <p><strong>Level:</strong> {{ property.level }}</p>
+                                            <p><strong>Income:</strong> ${{ property.income_rate }} per day</p>
+                                            <p><strong>Value:</strong> ${{ property.current_value }}</p>
+                                            
+                                            <div class="d-flex justify-content-between mt-3">
+                                                <form method="post" action="{% url 'collect_property_income' property.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-success btn-sm" {% if player.energy < 5 %}disabled{% endif %}>
+                                                        Collect Income
+                                                    </button>
+                                                </form>
+                                                <a href="{% url 'property_detail' property.id %}" class="btn btn-info btn-sm">
+                                                    Details
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            You don't own any properties yet. Buy one to start earning passive income!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Buy Property -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Buy Property</h4>
+                </div>
+                <div class="card-body">
+                    {% if available_properties %}
+                        <form method="post" action="{% url 'purchase_property' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="property_type_id" class="form-label">Property Type</label>
+                                <select class="form-select" id="property_type_id" name="property_type_id" required>
+                                    <option value="">Select a property type</option>
+                                    {% for prop_type in available_properties %}
+                                        <option value="{{ prop_type.id }}" data-price="{{ prop_type.base_price }}" data-income="{{ prop_type.base_income }}">
+                                            {{ prop_type.name }} - ${{ prop_type.base_price }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Base Income: $<span id="base_income">0</span> per day</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="location_id" class="form-label">Location</label>
+                                <select class="form-select" id="location_id" name="location_id" required>
+                                    <option value="">Select a location</option>
+                                    {% for location in locations %}
+                                        <option value="{{ location.id }}">
+                                            {{ location.name }} ({{ location.district }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Property Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required 
+                                       placeholder="Enter a name for your property">
+                            </div>
+                            
+                            <div class="alert alert-info mb-3">
+                                <strong>Price:</strong> $<span id="property_price">0</span><br>
+                                <strong>Your Cash:</strong> ${{ player.cash }}
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary" id="buyPropertyBtn">
+                                    Buy Property
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            No properties available for your level. Level up to unlock more properties!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const propertyTypeSelect = document.getElementById('property_type_id');
+        const propertyPriceSpan = document.getElementById('property_price');
+        const baseIncomeSpan = document.getElementById('base_income');
+        const buyPropertyBtn = document.getElementById('buyPropertyBtn');
+        const playerCash = {{ player.cash }};
+        
+        // Update price and income when property type changes
+        if (propertyTypeSelect) {
+            propertyTypeSelect.addEventListener('change', function() {
+                const selectedOption = propertyTypeSelect.options[propertyTypeSelect.selectedIndex];
+                
+                if (selectedOption.value) {
+                    const price = parseInt(selectedOption.dataset.price);
+                    const income = parseInt(selectedOption.dataset.income);
+                    
+                    propertyPriceSpan.textContent = price;
+                    baseIncomeSpan.textContent = income;
+                    
+                    // Disable buy button if player can't afford it
+                    if (price > playerCash) {
+                        buyPropertyBtn.disabled = true;
+                        buyPropertyBtn.innerHTML = "Not Enough Cash";
+                    } else {
+                        buyPropertyBtn.disabled = false;
+                        buyPropertyBtn.innerHTML = "Buy Property";
+                    }
+                } else {
+                    propertyPriceSpan.textContent = '0';
+                    baseIncomeSpan.textContent = '0';
+                    buyPropertyBtn.disabled = true;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 

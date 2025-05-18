@@ -1,0 +1,126 @@
+{% extends 'game/base.html' %}
+{% load static %}
+
+{% block title %}My Listings - Crime City{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'market' %}">Market</a></li>
+                    <li class="breadcrumb-item active">My Listings</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">My Market Listings</h2>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="showSoldListings" 
+                               {% if include_sold %}checked{% endif %}>
+                        <label class="form-check-label" for="showSoldListings">Show Sold/Expired</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if listings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Expires</th>
+                                        <th>Buyer</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for listing in listings %}
+                                    <tr {% if listing.status != 'active' %}class="table-secondary"{% endif %}>
+                                        <td>
+                                            <strong>{{ listing.item.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ listing.item.item_type.name }}</small>
+                                        </td>
+                                        <td>{{ listing.quantity }}</td>
+                                        <td>${{ listing.price }}</td>
+                                        <td>
+                                            {% if listing.status == 'active' %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% elif listing.status == 'sold' %}
+                                                <span class="badge bg-primary">Sold</span>
+                                            {% elif listing.status == 'expired' %}
+                                                <span class="badge bg-warning">Expired</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Cancelled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ listing.created_at|date:"M d, H:i" }}</td>
+                                        <td>{{ listing.expires_at|date:"M d, H:i" }}</td>
+                                        <td>
+                                            {% if listing.buyer %}
+                                                {{ listing.buyer.nickname }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if listing.status == 'active' %}
+                                                <form method="post" action="{% url 'cancel_listing' listing.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+                                                </form>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            You don't have any 
+                            {% if include_sold %}
+                                listings.
+                            {% else %}
+                                active listings.
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <a href="{% url 'market' %}" class="btn btn-primary">Back to Market</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const showSoldCheckbox = document.getElementById('showSoldListings');
+        
+        if (showSoldCheckbox) {
+            showSoldCheckbox.addEventListener('change', function() {
+                // Redirect to the same page with the include_sold parameter
+                window.location.href = "{% url 'player_listings' %}?include_sold=" + this.checked;
+            });
+        }
+    });
+</script>
+{% endblock %} 

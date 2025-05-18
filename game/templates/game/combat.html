@@ -1,0 +1,175 @@
+{% extends "game/base.html" %}
+{% block title %}Combat - Crime City{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-fist-raised"></i> Combat Arena</h5>
+                <span class="badge {% if player.current_location.is_safe_zone %}bg-success{% else %}bg-danger{% endif %}">
+                    {% if player.current_location.is_safe_zone %}Safe Zone - No Combat{% else %}Combat Zone{% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                {% if player.is_in_hospital %}
+                <div class="alert alert-danger">
+                    <h5 class="alert-heading">You're in the hospital!</h5>
+                    <p>You're currently recovering from your injuries. You'll be released in {{ player.hospital_release_time|timeuntil }}.</p>
+                </div>
+                {% elif player.is_in_jail %}
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">You're in jail!</h5>
+                    <p>You're currently serving time for your crimes. You'll be released in {{ player.jail_release_time|timeuntil }}.</p>
+                </div>
+                {% elif player.current_location.is_safe_zone %}
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">Safe Zone</h5>
+                    <p>Combat is not allowed in this area. Travel to a combat zone to find opponents.</p>
+                </div>
+                <a href="{% url 'locations' %}" class="btn btn-primary">
+                    <i class="fas fa-map-marked-alt"></i> View Locations
+                </a>
+                {% elif player.energy < 5 %}
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">Not enough energy!</h5>
+                    <p>You need at least 5 energy to engage in combat. Wait for your energy to replenish or use an energy drink.</p>
+                </div>
+                {% else %}
+                
+                <!-- Available Opponents -->
+                <h5 class="mb-3">Available Opponents:</h5>
+                {% if opponents %}
+                <div class="row">
+                    {% for opponent in opponents %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title mb-0">{{ opponent.nickname }}</h5>
+                                    <span class="badge bg-secondary">Lvl {{ opponent.level }}</span>
+                                </div>
+                                
+                                <!-- Stats comparison -->
+                                <div class="stats-comparison mb-3">
+                                    <div class="row mb-1">
+                                        <div class="col-8">Strength</div>
+                                        <div class="col-4 text-end">{{ opponent.strength }}</div>
+                                    </div>
+                                    <div class="row mb-1">
+                                        <div class="col-8">Defense</div>
+                                        <div class="col-4 text-end">{{ opponent.defense }}</div>
+                                    </div>
+                                    <div class="row mb-1">
+                                        <div class="col-8">Speed</div>
+                                        <div class="col-4 text-end">{{ opponent.speed }}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Estimated outcome -->
+                                {% with player_power=player.strength|add:player.speed|add:player.dexterity opponent_power=opponent.strength|add:opponent.speed|add:opponent.defense %}
+                                {% if player_power > opponent_power %}
+                                <div class="alert alert-success">
+                                    <small>You have a good chance of winning this fight.</small>
+                                </div>
+                                {% elif player_power < opponent_power %}
+                                <div class="alert alert-danger">
+                                    <small>This opponent might be too strong for you!</small>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning">
+                                    <small>This fight could go either way...</small>
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Energy cost: 5</small>
+                                    <a href="{% url 'attack_player' player_id=opponent.id %}" class="btn btn-danger">
+                                        <i class="fas fa-crosshairs"></i> Attack
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    No opponents available at your current location.
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Combat Logs -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Recent Combat History</h5>
+            </div>
+            <div class="card-body">
+                {% if combat_logs %}
+                <div class="list-group">
+                    {% for combat in combat_logs %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                {{ combat.attacker.nickname }} vs {{ combat.defender.nickname }}
+                            </h6>
+                            <small>{{ combat.started_at|timesince }} ago</small>
+                        </div>
+                        <p class="mb-1">
+                            {% if combat.winner == player %}
+                            <span class="text-success">
+                                <i class="fas fa-trophy"></i> Victory! 
+                                You won against {{ combat.defender.nickname }} and gained {{ combat.experience_gained }} XP.
+                                {% if combat.cash_stolen > 0 %}
+                                You stole ${{ combat.cash_stolen }}.
+                                {% endif %}
+                            </span>
+                            {% elif combat.winner and combat.winner.id != player.id %}
+                            <span class="text-danger">
+                                <i class="fas fa-times-circle"></i> Defeat! 
+                                You lost against {{ combat.attacker.nickname }}.
+                                {% if combat.cash_stolen > 0 %}
+                                They stole ${{ combat.cash_stolen }}.
+                                {% endif %}
+                            </span>
+                            {% else %}
+                            <span class="text-warning">
+                                <i class="fas fa-question-circle"></i> Result unknown
+                            </span>
+                            {% endif %}
+                        </p>
+                        <a data-bs-toggle="collapse" href="#combatDetails{{ combat.id }}" class="small">
+                            View Details
+                        </a>
+                        <div class="collapse mt-2" id="combatDetails{{ combat.id }}">
+                            <div class="card card-body bg-dark text-light">
+                                {% for log in combat.logs.all %}
+                                <div>{{ log.message }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No combat history to display.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // JavaScript for handling combat interactions could go here
+});
+</script>
+{% endblock %}

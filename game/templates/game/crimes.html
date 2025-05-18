@@ -1,0 +1,233 @@
+{% extends 'game/base.html' %}
+{% load static %}
+{% load game_extras %}
+
+{% block title %}Crimes - Crime City{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-3">Criminal Activities</h1>
+    
+    {% if player.is_in_jail %}
+    <div class="alert alert-danger">
+        <h4 class="alert-heading">You're in Jail!</h4>
+        <p>You've been caught and sentenced to jail time. You'll be released in <span id="jail-countdown">Loading...</span>.</p>
+        <hr>
+        <p class="mb-0">While in jail, you cannot commit crimes or travel. However, your properties still generate income and your energy/health will regenerate.</p>
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <!-- Available Crimes -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Available Crimes</h4>
+                </div>
+                <div class="card-body">
+                    {% if available_crimes %}
+                        <div class="row">
+                            {% for crime in available_crimes %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="card-title mb-0">{{ crime.name }}</h5>
+                                            <span class="badge bg-secondary">Level {{ crime.min_level }}+</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="card-text">{{ crime.description }}</p>
+                                            
+                                            <div class="row mb-3">
+                                                <div class="col">
+                                                    <small class="text-muted">Rewards:</small>
+                                                    <div>${{ crime.min_cash_reward }} - ${{ crime.max_cash_reward }}</div>
+                                                    <div>{{ crime.min_exp_reward }} - {{ crime.max_exp_reward }} XP</div>
+                                                </div>
+                                                <div class="col text-end">
+                                                    <small class="text-muted">Energy Cost:</small>
+                                                    <div>{{ crime.energy_cost }}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <small class="text-muted">Risk Level:</small>
+                                                <div class="progress" style="height: 20px;">
+                                                    {% with risk_percentage=crime.jail_risk|floatformat:2|stringformat:'f'|multiply:100 %}
+                                                    <div class="progress-bar bg-danger" role="progressbar" 
+                                                         style="width: {{ risk_percentage }}%;"
+                                                         aria-valuenow="{{ risk_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                                        {{ risk_percentage|floatformat:0 }}%
+                                                    </div>
+                                                    {% endwith %}
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <small class="text-muted">Success Factors:</small>
+                                                <ul class="list-unstyled mb-0">
+                                                    {% if crime.strength_factor > 0 %}
+                                                    <li>💪 Strength: {{ crime.strength_factor|floatformat:1 }}</li>
+                                                    {% endif %}
+                                                    {% if crime.defense_factor > 0 %}
+                                                    <li>🛡️ Defense: {{ crime.defense_factor|floatformat:1 }}</li>
+                                                    {% endif %}
+                                                    {% if crime.speed_factor > 0 %}
+                                                    <li>⚡ Speed: {{ crime.speed_factor|floatformat:1 }}</li>
+                                                    {% endif %}
+                                                    {% if crime.dexterity_factor > 0 %}
+                                                    <li>🎯 Dexterity: {{ crime.dexterity_factor|floatformat:1 }}</li>
+                                                    {% endif %}
+                                                    {% if crime.intelligence_factor > 0 %}
+                                                    <li>🧠 Intelligence: {{ crime.intelligence_factor|floatformat:1 }}</li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                            
+                                            <form method="post" action="{% url 'commit_crime' crime.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger w-100" 
+                                                        {% if player.energy < crime.energy_cost or player.is_in_jail %}disabled{% endif %}>
+                                                    Commit Crime
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            No crimes available for your level. Level up to unlock more crimes!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Results and Stats -->
+        <div class="col-md-4">
+            <!-- Player Stats -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Your Stats</h4>
+                </div>
+                <div class="card-body text-white">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <strong class="text-white">Level:</strong> <span class="text-white">{{ player.level }}</span>
+                        </div>
+                        <div class="col">
+                            <strong class="text-white">Energy:</strong> <span class="text-white">{{ player.energy }}/{{ player.max_energy }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong class="text-white">Key Stats:</strong>
+                        <ul class="list-unstyled mb-0 text-white">
+                            <li class="text-white">💪 Strength: {{ player.strength }}</li>
+                            <li class="text-white">🛡️ Defense: {{ player.defense }}</li>
+                            <li class="text-white">⚡ Speed: {{ player.speed }}</li>
+                            <li class="text-white">🎯 Dexterity: {{ player.dexterity }}</li>
+                            <li class="text-white">🧠 Intelligence: {{ player.intelligence }}</li>
+                        </ul>
+                    </div>
+                    
+                    {% if crime_stats %}
+                    <div class="mb-3">
+                        <strong class="text-white">Crime Record:</strong>
+                        <ul class="list-unstyled mb-0 text-white">
+                            <li class="text-white">Total Crimes: {{ crime_stats.total_crimes }}</li>
+                            <li class="text-white">Success Rate: {{ crime_stats.success_rate }}%</li>
+                            <li class="text-white">Times Jailed: {{ crime_stats.jailed_count }}</li>
+                            <li class="text-white">Total Earnings: ${{ crime_stats.total_earnings }}</li>
+                        </ul>
+                    </div>
+                    
+                    <a href="{% url 'crime_stats' %}" class="btn btn-outline-secondary btn-sm">View Detailed Stats</a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recent Results -->
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Recent Results</h4>
+                </div>
+                <div class="card-body">
+                    {% if recent_results %}
+                        <div class="list-group">
+                            {% for result in recent_results %}
+                                <a href="{% url 'crime_detail' result.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ result.crime_type.name }}</h5>
+                                        
+                                        {% if result.result == 'success' %}
+                                            <span class="badge bg-success">Success</span>
+                                        {% elif result.result == 'failed' %}
+                                            <span class="badge bg-warning">Failed</span>
+                                        {% elif result.result == 'jailed' %}
+                                            <span class="badge bg-danger">Jailed</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ result.result }}</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if result.result == 'success' %}
+                                        <p class="mb-1">${{ result.cash_reward }} earned, {{ result.exp_reward }} XP</p>
+                                    {% elif result.result == 'jailed' %}
+                                        <p class="mb-1">{{ result.jail_time|floatformat:0 }} seconds in jail</p>
+                                    {% endif %}
+                                    
+                                    <small class="text-muted">{{ result.created_at|date:"M d, H:i" }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            You haven't committed any crimes yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const jailCountdown = document.getElementById('jail-countdown');
+        
+        {% if player.is_in_jail %}
+            // Get release time from server in ISO format
+            const releaseTime = new Date('{{ player.jail_release_time|date:"c" }}');
+            
+            // Update the countdown every second
+            const updateCountdown = () => {
+                const now = new Date();
+                const diff = releaseTime - now;
+                
+                // If already released
+                if (diff <= 0) {
+                    jailCountdown.innerHTML = 'Refresh page to confirm release';
+                    return;
+                }
+                
+                // Calculate minutes and seconds
+                const minutes = Math.floor(diff / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                
+                // Display the countdown
+                jailCountdown.innerHTML = `${minutes}m ${seconds}s`;
+            };
+            
+            // Initial update
+            updateCountdown();
+            
+            // Update every second
+            setInterval(updateCountdown, 1000);
+        {% endif %}
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,72 @@
+{% extends "game/base.html" %}
+{% block title %}Locations - Crime City{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-map-marked-alt"></i> City Map</h5>
+            </div>
+            <div class="card-body">
+                <p>Explore the different areas of Crime City. Each location offers unique opportunities and dangers.</p>
+                
+                <div class="row">
+                    {% for district, locations in districts.items %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">
+                                <h5 class="mb-0">{{ district }}</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush">
+                                    {% for location in locations %}
+                                    <div class="list-group-item {% if player.current_location.id == location.id %}active{% endif %}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">{{ location.name }}</h6>
+                                                <small>
+                                                    Min Level: {{ location.min_level }} | 
+                                                    {% if location.is_safe_zone %}
+                                                    <span class="text-success">Safe Zone</span>
+                                                    {% else %}
+                                                    <span class="text-danger">Combat Zone</span>
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                            
+                                            {% if player.current_location.id != location.id %}
+                                            <div>
+                                                {% if player.level >= location.min_level %}
+                                                <a href="{% url 'travel' location_id=location.id %}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-route"></i> Travel
+                                                </a>
+                                                {% else %}
+                                                <button class="btn btn-sm btn-secondary" disabled>
+                                                    <i class="fas fa-lock"></i> Locked
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                            {% else %}
+                                            <span class="badge bg-info">You are here</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-warning">
+                            No locations available. Please check back later.
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

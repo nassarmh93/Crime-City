@@ -1,0 +1,354 @@
+[
+    {
+        "model": "game.location",
+        "pk": 1,
+        "fields": {
+            "name": "Downtown",
+            "description": "The central business district of Crime City. A relatively safe area with shops, banks, and offices.",
+            "image": "",
+            "is_safe_zone": true,
+            "energy_cost": 1,
+            "min_level": 1,
+            "district": "Central"
+        }
+    },
+    {
+        "model": "game.location",
+        "pk": 2,
+        "fields": {
+            "name": "Eastside",
+            "description": "A rough neighborhood known for gang activity. Watch your back here.",
+            "image": "",
+            "is_safe_zone": false,
+            "energy_cost": 1,
+            "min_level": 1,
+            "district": "East"
+        }
+    },
+    {
+        "model": "game.location",
+        "pk": 3,
+        "fields": {
+            "name": "Westside",
+            "description": "An upscale area with luxury shops and expensive properties.",
+            "image": "",
+            "is_safe_zone": false,
+            "energy_cost": 2,
+            "min_level": 5,
+            "district": "West"
+        }
+    },
+    {
+        "model": "game.location",
+        "pk": 4,
+        "fields": {
+            "name": "Northside",
+            "description": "An industrial area with factories and warehouses. Good place for jobs.",
+            "image": "",
+            "is_safe_zone": false,
+            "energy_cost": 2,
+            "min_level": 3,
+            "district": "North"
+        }
+    },
+    {
+        "model": "game.location",
+        "pk": 5,
+        "fields": {
+            "name": "Southside",
+            "description": "A residential neighborhood with parks and schools.",
+            "image": "",
+            "is_safe_zone": true,
+            "energy_cost": 1,
+            "min_level": 1,
+            "district": "South"
+        }
+    },
+    {
+        "model": "game.locationconnection",
+        "pk": 1,
+        "fields": {
+            "from_location": 1,
+            "to_location": 2,
+            "travel_time": 5,
+            "travel_cost": 10
+        }
+    },
+    {
+        "model": "game.locationconnection",
+        "pk": 2,
+        "fields": {
+            "from_location": 1,
+            "to_location": 3,
+            "travel_time": 10,
+            "travel_cost": 20
+        }
+    },
+    {
+        "model": "game.locationconnection",
+        "pk": 3,
+        "fields": {
+            "from_location": 1,
+            "to_location": 4,
+            "travel_time": 7,
+            "travel_cost": 15
+        }
+    },
+    {
+        "model": "game.locationconnection",
+        "pk": 4,
+        "fields": {
+            "from_location": 1,
+            "to_location": 5,
+            "travel_time": 5,
+            "travel_cost": 10
+        }
+    },
+    {
+        "model": "game.locationconnection",
+        "pk": 5,
+        "fields": {
+            "from_location": 2,
+            "to_location": 1,
+            "travel_time": 5,
+            "travel_cost": 10
+        }
+    },
+    {
+        "model": "game.locationconnection",
+        "pk": 6,
+        "fields": {
+            "from_location": 3,
+            "to_location": 1,
+            "travel_time": 10,
+            "travel_cost": 20
+        }
+    },
+    {
+        "model": "game.locationconnection",
+        "pk": 7,
+        "fields": {
+            "from_location": 4,
+            "to_location": 1,
+            "travel_time": 7,
+            "travel_cost": 15
+        }
+    },
+    {
+        "model": "game.locationconnection",
+        "pk": 8,
+        "fields": {
+            "from_location": 5,
+            "to_location": 1,
+            "travel_time": 5,
+            "travel_cost": 10
+        }
+    },
+    {
+        "model": "game.itemtype",
+        "pk": 1,
+        "fields": {
+            "name": "Weapon",
+            "description": "Items used for attacking opponents in combat"
+        }
+    },
+    {
+        "model": "game.itemtype",
+        "pk": 2,
+        "fields": {
+            "name": "Armor",
+            "description": "Items that increase defense in combat"
+        }
+    },
+    {
+        "model": "game.itemtype",
+        "pk": 3,
+        "fields": {
+            "name": "Consumable",
+            "description": "Items that can be used to restore health or energy"
+        }
+    },
+    {
+        "model": "game.item",
+        "pk": 1,
+        "fields": {
+            "name": "Baseball Bat",
+            "description": "A wooden bat that can be used as a weapon",
+            "image": "",
+            "item_type": 1,
+            "buy_price": 500,
+            "sell_price": 200,
+            "min_level": 1,
+            "attack_power": 5,
+            "defense_power": 0,
+            "speed_bonus": 0,
+            "energy_restore": 0,
+            "health_restore": 0,
+            "is_tradable": true,
+            "is_equippable": true,
+            "is_consumable": false
+        }
+    },
+    {
+        "model": "game.item",
+        "pk": 2,
+        "fields": {
+            "name": "Knife",
+            "description": "A sharp knife for close combat",
+            "image": "",
+            "item_type": 1,
+            "buy_price": 1000,
+            "sell_price": 400,
+            "min_level": 2,
+            "attack_power": 10,
+            "defense_power": 0,
+            "speed_bonus": 2,
+            "energy_restore": 0,
+            "health_restore": 0,
+            "is_tradable": true,
+            "is_equippable": true,
+            "is_consumable": false
+        }
+    },
+    {
+        "model": "game.item",
+        "pk": 3,
+        "fields": {
+            "name": "Pistol",
+            "description": "A handgun for ranged combat",
+            "image": "",
+            "item_type": 1,
+            "buy_price": 5000,
+            "sell_price": 2000,
+            "min_level": 5,
+            "attack_power": 25,
+            "defense_power": 0,
+            "speed_bonus": 5,
+            "energy_restore": 0,
+            "health_restore": 0,
+            "is_tradable": true,
+            "is_equippable": true,
+            "is_consumable": false
+        }
+    },
+    {
+        "model": "game.item",
+        "pk": 4,
+        "fields": {
+            "name": "Leather Jacket",
+            "description": "A tough jacket that provides basic protection",
+            "image": "",
+            "item_type": 2,
+            "buy_price": 800,
+            "sell_price": 300,
+            "min_level": 1,
+            "attack_power": 0,
+            "defense_power": 8,
+            "speed_bonus": 0,
+            "energy_restore": 0,
+            "health_restore": 0,
+            "is_tradable": true,
+            "is_equippable": true,
+            "is_consumable": false
+        }
+    },
+    {
+        "model": "game.item",
+        "pk": 5,
+        "fields": {
+            "name": "Kevlar Vest",
+            "description": "A bulletproof vest for serious protection",
+            "image": "",
+            "item_type": 2,
+            "buy_price": 6000,
+            "sell_price": 2400,
+            "min_level": 8,
+            "attack_power": 0,
+            "defense_power": 30,
+            "speed_bonus": -5,
+            "energy_restore": 0,
+            "health_restore": 0,
+            "is_tradable": true,
+            "is_equippable": true,
+            "is_consumable": false
+        }
+    },
+    {
+        "model": "game.item",
+        "pk": 6,
+        "fields": {
+            "name": "Energy Drink",
+            "description": "Restores 20 energy points",
+            "image": "",
+            "item_type": 3,
+            "buy_price": 200,
+            "sell_price": 50,
+            "min_level": 1,
+            "attack_power": 0,
+            "defense_power": 0,
+            "speed_bonus": 0,
+            "energy_restore": 20,
+            "health_restore": 0,
+            "is_tradable": true,
+            "is_equippable": false,
+            "is_consumable": true
+        }
+    },
+    {
+        "model": "game.item",
+        "pk": 7,
+        "fields": {
+            "name": "First Aid Kit",
+            "description": "Restores 30 health points",
+            "image": "",
+            "item_type": 3,
+            "buy_price": 300,
+            "sell_price": 75,
+            "min_level": 1,
+            "attack_power": 0,
+            "defense_power": 0,
+            "speed_bonus": 0,
+            "energy_restore": 0,
+            "health_restore": 30,
+            "is_tradable": true,
+            "is_equippable": false,
+            "is_consumable": true
+        }
+    },
+    {
+        "model": "game.propertytype",
+        "pk": 1,
+        "fields": {
+            "name": "Apartment",
+            "description": "A small apartment for living",
+            "image": "",
+            "base_price": 50000,
+            "base_income": 500,
+            "min_level": 3
+        }
+    },
+    {
+        "model": "game.propertytype",
+        "pk": 2,
+        "fields": {
+            "name": "Convenience Store",
+            "description": "A small store for selling goods",
+            "image": "",
+            "base_price": 100000,
+            "base_income": 1000,
+            "min_level": 5
+        }
+    },
+    {
+        "model": "game.propertytype",
+        "pk": 3,
+        "fields": {
+            "name": "Nightclub",
+            "description": "A nightclub for entertainment and passive income",
+            "image": "",
+            "base_price": 500000,
+            "base_income": 5000,
+            "min_level": 10
+        }
+    }
+] 

@@ -1,0 +1,179 @@
+{% extends 'game/base.html' %}
+{% load static %}
+
+{% block title %}Crime Details - Crime City{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'crimes' %}">Crimes</a></li>
+                    <li class="breadcrumb-item active">Crime Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">{{ result.crime_type.name }}</h2>
+                    {% if result.result == 'success' %}
+                        <span class="badge bg-success">Success</span>
+                    {% elif result.result == 'failed' %}
+                        <span class="badge bg-warning">Failed</span>
+                    {% elif result.result == 'jailed' %}
+                        <span class="badge bg-danger">Jailed</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ result.result }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h4>Crime Details</h4>
+                            <table class="table">
+                                <tr>
+                                    <th>Date & Time:</th>
+                                    <td>{{ result.created_at|date:"F j, Y, g:i a" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Location:</th>
+                                    <td>{{ result.location.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Result:</th>
+                                    <td>
+                                        {% if result.result == 'success' %}
+                                            <span class="text-success">Successful</span>
+                                        {% elif result.result == 'failed' %}
+                                            <span class="text-warning">Failed</span>
+                                        {% elif result.result == 'jailed' %}
+                                            <span class="text-danger">Caught & Jailed</span>
+                                        {% else %}
+                                            {{ result.result }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            {% if result.result == 'success' %}
+                                <h4 class="text-success">Rewards</h4>
+                                <table class="table">
+                                    <tr>
+                                        <th>Cash:</th>
+                                        <td>${{ result.cash_reward }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Experience:</th>
+                                        <td>{{ result.exp_reward }} XP</td>
+                                    </tr>
+                                    {% if result.item_reward %}
+                                    <tr>
+                                        <th>Item:</th>
+                                        <td>{{ result.item_reward.name }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            {% elif result.result == 'jailed' %}
+                                <h4 class="text-danger">Jail Sentence</h4>
+                                <table class="table">
+                                    <tr>
+                                        <th>Jail Time:</th>
+                                        <td>{{ result.jail_time|floatformat:0 }} seconds</td>
+                                    </tr>
+                                </table>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="alert 
+                        {% if result.result == 'success' %}alert-success
+                        {% elif result.result == 'failed' %}alert-warning
+                        {% elif result.result == 'jailed' %}alert-danger
+                        {% else %}alert-secondary{% endif %}">
+                        {% if result.result == 'success' %}
+                            <h4 class="alert-heading">Success!</h4>
+                            <p>You successfully committed the crime and got away with it. The cash and experience have been added to your account.</p>
+                            {% if result.item_reward %}
+                            <hr>
+                            <p class="mb-0">You also found a {{ result.item_reward.name }} during the crime!</p>
+                            {% endif %}
+                        {% elif result.result == 'failed' %}
+                            <h4 class="alert-heading">Failed!</h4>
+                            <p>You failed to commit the crime, but managed to escape before being caught. Better luck next time!</p>
+                        {% elif result.result == 'jailed' %}
+                            <h4 class="alert-heading">Busted!</h4>
+                            <p>You were caught by law enforcement and sent to jail for {{ result.jail_time|floatformat:0 }} seconds!</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Crime Type Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Crime Information</h4>
+                </div>
+                <div class="card-body">
+                    <p>{{ crime_type.description }}</p>
+                    
+                    <div class="mb-3">
+                        <strong>Requirements:</strong>
+                        <ul class="list-unstyled">
+                            <li>Minimum Level: {{ crime_type.min_level }}</li>
+                            <li>Energy Cost: {{ crime_type.energy_cost }}</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Potential Rewards:</strong>
+                        <ul class="list-unstyled">
+                            <li>Cash: ${{ crime_type.min_cash_reward }} - ${{ crime_type.max_cash_reward }}</li>
+                            <li>Experience: {{ crime_type.min_exp_reward }} - {{ crime_type.max_exp_reward }} XP</li>
+                            <li>Item Chance: {{ crime_type.item_reward_chance|floatformat:1 }}%</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Risk:</strong>
+                        <ul class="list-unstyled">
+                            <li>Jail Risk: {{ crime_type.jail_risk|floatformat:2|stringformat:'f'|multiply:100 }}%</li>
+                            <li>Jail Time: {{ crime_type.min_jail_time }} - {{ crime_type.max_jail_time }} seconds</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Actions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'crimes' %}" class="btn btn-primary">Back to Crimes</a>
+                        
+                        {% if crime_type.min_level <= player.level and not player.is_in_jail %}
+                        <form method="post" action="{% url 'commit_crime' crime_type.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger w-100" 
+                                    {% if player.energy < crime_type.energy_cost %}disabled{% endif %}>
+                                Try Again
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

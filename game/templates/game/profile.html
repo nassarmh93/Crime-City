@@ -1,0 +1,138 @@
+{% extends "game/base.html" %}
+{% load game_extras %}
+{% block title %}Profile - Crime City{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-circle"></i> Player Profile</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 class="mb-3">Account Information</h4>
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" value="{{ user.username }}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="{{ user.email }}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date Joined</label>
+                            <input type="text" class="form-control" value="{{ user.date_joined|date:'F j, Y' }}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Last Login</label>
+                            <input type="text" class="form-control" value="{{ user.last_login|date:'F j, Y' }}" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h4 class="mb-3">Character Information</h4>
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.nickname.id_for_label }}" class="form-label">Character Nickname</label>
+                                <input type="text" class="form-control {% if form.nickname.errors %}is-invalid{% endif %}" 
+                                       id="{{ form.nickname.id_for_label }}" name="{{ form.nickname.html_name }}" 
+                                       value="{{ form.nickname.value|default:player.nickname }}">
+                                {% if form.nickname.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.nickname.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Level</label>
+                                <input type="text" class="form-control" value="{{ player.level }}" readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Experience</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" value="{{ player.experience }}" readonly>
+                                    <span class="input-group-text">/ {{ player.level|multiply:100 }}</span>
+                                </div>
+                                <div class="progress mt-1" style="height: 5px;">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ player.experience|percentage:player.level }}%;"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Update Profile
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h4 class="mb-3">Game Statistics</h4>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card bg-dark text-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Finances</h5>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Cash</span>
+                                            <span>${{ player.cash }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Bank</span>
+                                            <span>${{ player.bank_balance }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="card bg-dark text-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Combat</h5>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Attacks</span>
+                                            <span>{{ player.attacks.count }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Victories</span>
+                                            <span>{{ player.combat_wins.count }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="card bg-dark text-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Properties</h5>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Owned</span>
+                                            <span>{{ player.properties.count }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Daily Income</span>
+                                            <span>${{ player.properties.all|sum:'income_rate' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

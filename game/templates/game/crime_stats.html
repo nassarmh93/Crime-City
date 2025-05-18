@@ -1,0 +1,212 @@
+{% extends 'game/base.html' %}
+{% load static %}
+
+{% block title %}Crime Statistics - Crime City{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'crimes' %}">Crimes</a></li>
+                    <li class="breadcrumb-item active">Crime Statistics</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="mb-0">Criminal Career Statistics</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <h3 class="display-4">{{ stats.total_crimes }}</h3>
+                                    <p class="text-muted">Total Crimes</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <h3 class="display-4">{{ stats.success_rate }}%</h3>
+                                    <p class="text-muted">Success Rate</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <h3 class="display-4">{{ stats.jailed_count }}</h3>
+                                    <p class="text-muted">Times Jailed</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <h3 class="display-4">${{ stats.total_earnings }}</h3>
+                                    <p class="text-muted">Total Earnings</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h4 class="mb-0">Crime Distribution</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container" style="position: relative; height:300px;">
+                                        <canvas id="crimeDistributionChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h4 class="mb-0">Results Breakdown</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container" style="position: relative; height:300px;">
+                                        <canvas id="resultsChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0">Crime Type Statistics</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Crime</th>
+                                            <th>Attempts</th>
+                                            <th>Successful</th>
+                                            <th>Success Rate</th>
+                                            <th>Total Earnings</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for crime_stat in crime_type_stats %}
+                                        <tr>
+                                            <td>{{ crime_stat.name }}</td>
+                                            <td>{{ crime_stat.total }}</td>
+                                            <td>{{ crime_stat.successes }}</td>
+                                            <td>{{ crime_stat.success_rate }}%</td>
+                                            <td>${{ crime_stat.earnings }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Prepare data for crime distribution chart
+        const crimesData = {
+            labels: [{% for crime_stat in crime_type_stats %}'{{ crime_stat.name }}',{% endfor %}],
+            datasets: [{
+                label: 'Number of Attempts',
+                data: [{% for crime_stat in crime_type_stats %}{{ crime_stat.total }},{% endfor %}],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)',
+                    'rgba(199, 199, 199, 0.6)'
+                ],
+            }]
+        };
+        
+        // Prepare data for results breakdown chart
+        const resultsData = {
+            labels: ['Successful', 'Failed', 'Jailed'],
+            datasets: [{
+                label: 'Crime Results',
+                data: [
+                    {{ stats.successful_crimes }},
+                    {{ stats.failed_crimes }},
+                    {{ stats.jailed_count }}
+                ],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(255, 99, 132, 0.6)'
+                ],
+            }]
+        };
+        
+        // Create crime distribution chart
+        const crimeDistributionCanvas = document.getElementById('crimeDistributionChart');
+        if (crimeDistributionCanvas) {
+            new Chart(crimeDistributionCanvas, {
+                type: 'bar',
+                data: crimesData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        title: {
+                            display: true,
+                            text: 'Crime Attempts by Type'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Create results breakdown chart
+        const resultsCanvas = document.getElementById('resultsChart');
+        if (resultsCanvas) {
+            new Chart(resultsCanvas, {
+                type: 'pie',
+                data: resultsData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Crime Results'
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 

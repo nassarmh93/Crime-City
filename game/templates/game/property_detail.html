@@ -1,0 +1,185 @@
+{% extends 'game/base.html' %}
+{% load static %}
+{% load game_extras %}
+
+{% block title %}{{ property.name }} - Crime City{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'property' %}">Properties</a></li>
+                    <li class="breadcrumb-item active">{{ property.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="card-title mb-0">{{ property.name }}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Property Information</h4>
+                            <table class="table">
+                                <tr>
+                                    <th>Type:</th>
+                                    <td>{{ property.property_type.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Location:</th>
+                                    <td>{{ property.location.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>District:</th>
+                                    <td>{{ property.location.district }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Purchase Price:</th>
+                                    <td>${{ property.purchase_price }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Current Value:</th>
+                                    <td>${{ property.current_value }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Purchased On:</th>
+                                    <td>{{ property.purchased_on|date:"F j, Y" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Business Metrics</h4>
+                            <table class="table">
+                                <tr>
+                                    <th>Level:</th>
+                                    <td>{{ property.level }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Income Rate:</th>
+                                    <td>${{ property.income_rate }} per day</td>
+                                </tr>
+                                <tr>
+                                    <th>Last Collection:</th>
+                                    <td>{{ property.last_income_collection|date:"F j, Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status:</th>
+                                    <td>
+                                        {% if property.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h4>Description</h4>
+                            <p>{{ property.property_type.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Actions -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="card-title mb-0">Actions</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <form method="post" action="{% url 'collect_property_income' property.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100" {% if player.energy < 5 %}disabled{% endif %}>
+                                Collect Income (5 Energy)
+                            </button>
+                        </form>
+                        
+                        <form method="post" action="{% url 'upgrade_property' property.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary w-100" 
+                                    {% if player.cash < upgrade_cost %}disabled{% endif %}>
+                                Upgrade Property (${{ upgrade_cost }})
+                            </button>
+                        </form>
+                        
+                        <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" 
+                                data-bs-target="#sellPropertyModal">
+                            Sell Property (${{ sell_value }})
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Property Stats -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="card-title mb-0">Property Stats</h4>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: {{ property.level|percentage:10 }}%;"
+                             aria-valuenow="{{ property.level }}" aria-valuemin="0" aria-valuemax="10">
+                            Level: {{ property.level }}/10
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <p class="mb-1"><strong>Upgrade Benefits:</strong></p>
+                        <ul class="mb-0">
+                            <li>Income +{{ property.income_rate|multiply:0.2|floatformat:0 }} per level</li>
+                            <li>Value +{{ property.current_value|multiply:0.15|floatformat:0 }} per level</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sell Property Modal -->
+<div class="modal fade" id="sellPropertyModal" tabindex="-1" aria-labelledby="sellPropertyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sellPropertyModalLabel">Confirm Property Sale</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to sell <strong>{{ property.name }}</strong>?</p>
+                <div class="alert alert-warning">
+                    <p class="mb-1">Sale Details:</p>
+                    <ul class="mb-0">
+                        <li>Current Value: ${{ property.current_value }}</li>
+                        <li>Sale Price: ${{ sell_value }} (70% of value)</li>
+                        <li>You will lose ${{ property.income_rate }} daily income</li>
+                    </ul>
+                </div>
+                <p>This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'sell_property' property.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Sell Property</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
